@@ -70,7 +70,7 @@ export default function App() {
   return (
     <Center p={5}>
       <Flex flexDir="column" w="100%" maxW={1000}>
-        <Heading>Tarefas</Heading>
+        <Heading as="h1">Tarefas</Heading>
         <form onSubmit={addNewTask}>
           <HStack mt={5}>
             <Input type="text" placeholder="Digite algo..." ref={inputTaskRef} borderColor="gray.300" />
@@ -82,32 +82,39 @@ export default function App() {
             })}
           </HStack>
         </form>
-        <List spacing={3} mt={5}>
-          {taskList.map(_task => (
-            <ListItem key={_task.id} bgColor="gray.100" borderRadius={5} borderColor="gray.300" borderWidth={1} p={3} pl={5}>
-              <SlideFade in>
-                <Flex>
-                  <Checkbox isChecked={_task.done} onChange={() => updateTaskState(_task)} colorScheme="teal" borderColor="gray.300" mr={2} />
-                  <span>{_task.content}</span>
-                  <Spacer />
-                  <Tooltip label="Remover" hasArrow bgColor="red.500">
-                    <IconButton
-                      aria-label="Remover"
-                      colorScheme="red"
-                      variant="link"
-                      icon={<DeleteIcon />}
-                      onClick={() => removeTask(_task)}
-                    />
-                  </Tooltip>
-                </Flex>
-              </SlideFade>
-            </ListItem>
-          ))}
-        </List>
-        {taskList.some(_task => _task.done) &&
-          <ScaleFade in>
-            <Button colorScheme="red" leftIcon={<DeleteIcon />} onClick={removeAllDoneTasks} mt={5}>Remover concluídos</Button>
-          </ScaleFade>
+        {taskList.length < 1
+          ? <SlideFade in>
+            <Heading m={5}>👆</Heading>
+          </SlideFade>
+          : <>
+            <List spacing={3} mt={5}>
+              {taskList.map(_task => (
+                <ListItem key={_task.id} bgColor="gray.100" borderRadius={5} borderColor="gray.300" borderWidth={1} p={3} pl={5}>
+                  <SlideFade in>
+                    <Flex>
+                      <Checkbox isChecked={_task.done} onChange={() => updateTaskState(_task)} colorScheme="teal" borderColor="gray.300" mr={2} />
+                      <span>{_task.content}</span>
+                      <Spacer />
+                      <Tooltip label="Remover" hasArrow bgColor="red.500">
+                        <IconButton
+                          aria-label="Remover"
+                          colorScheme="red"
+                          variant="link"
+                          icon={<DeleteIcon />}
+                          onClick={() => removeTask(_task)}
+                        />
+                      </Tooltip>
+                    </Flex>
+                  </SlideFade>
+                </ListItem>
+              ))}
+            </List>
+            {taskList.some(_task => _task.done) &&
+              <ScaleFade in>
+                <Button colorScheme="red" leftIcon={<DeleteIcon />} onClick={removeAllDoneTasks} mt={5}>Remover concluídos</Button>
+              </ScaleFade>
+            }
+          </>
         }
       </Flex>
     </Center>
