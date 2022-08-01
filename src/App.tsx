@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Button, Center, Checkbox, Flex, Heading, HStack, IconButton, Input, List, ListItem, ScaleFade, SlideFade, Spacer, Tooltip, useBreakpointValue, useToast } from "@chakra-ui/react";
+import { Button, Center, Checkbox, Flex, Heading, HStack, IconButton, Input, List, ListItem, ScaleFade, SlideFade, Spacer, Text, Tooltip, useBreakpointValue, useToast } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import cuid from "cuid";
 
@@ -93,7 +93,9 @@ export default function App() {
                   <SlideFade in>
                     <Flex>
                       <Checkbox isChecked={_task.done} onChange={() => updateTaskState(_task)} colorScheme="teal" borderColor="gray.300" mr={2} />
-                      <span>{_task.content}</span>
+                      <Text style={_task.done ? { opacity: .6, textDecorationLine: "line-through", transitionDuration: ".3s" } : { transitionDuration: ".3s" }}>
+                        {_task.content}
+                      </Text>
                       <Spacer />
                       <Tooltip label="Remover" hasArrow bgColor="red.500">
                         <IconButton
