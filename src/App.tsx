@@ -1,124 +1,123 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
-import { Button, Center, Checkbox, Flex, Heading, HStack, IconButton, Input, List, ListItem, ScaleFade, SlideFade, Spacer, Text, Tooltip, useBreakpointValue, useToast } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
-import cuid from "cuid";
+import cuid from 'cuid';
+import { AnimatePresence, motion, Reorder } from 'framer-motion';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
+import './App.scss';
 
 export default function App() {
   interface Task {
     id: string;
-    content: string;
-    done: boolean;
+    text: string;
+    isDone: boolean;
   }
 
   const [taskList, setTaskList] = useState<Task[]>([]);
-  const [afterInit, setAfterInit] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const inputTaskRef = useRef<HTMLInputElement>(null);
 
-  const toast = useToast();
-
   useEffect(() => {
-    setTaskList(JSON.parse(localStorage.getItem("tasks") ?? "[]"));
-    setAfterInit(true);
+    if (!dataLoaded) {
+      setTaskList(JSON.parse(localStorage.getItem('tasklist') ?? '[]'));
+      setDataLoaded(true);
+    }
   }, []);
 
   useEffect(() => {
-    if (afterInit)
-      localStorage.setItem("tasks", JSON.stringify(taskList));
-  }, [taskList, afterInit]);
+    if (dataLoaded) {
+      localStorage.setItem('tasklist', JSON.stringify(taskList));
+    }
+  }, [taskList]);
 
-  function addNewTask(event: FormEvent<HTMLFormElement>) {
+  function createTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!inputTaskRef.current?.value) {
+    const taskText = inputTaskRef.current?.value ?? '';
+
+    if (taskText.length < 1) {
       inputTaskRef.current?.focus();
       return;
     }
 
-    let newTask: Task = {
+    const newTask: Task = {
       id: cuid(),
-      content: inputTaskRef.current!.value,
-      done: false
+      text: taskText,
+      isDone: false,
     };
 
-    setTaskList(_state => [newTask, ..._state]);
-    inputTaskRef.current.value = "";
+    setTaskList(_taskList => [newTask, ..._taskList]);
+    inputTaskRef.current!.value = '';
   }
 
-  function removeTask(t: Task) {
-    setTaskList(_state => _state.filter(_task => _task !== t));
+  function deleteTask(t: Task) {
+    setTaskList(_taskList => _taskList.filter(_task => _task !== t));
   }
 
-  function removeAllDoneTasks() {
-    setTaskList(_state => _state.filter(_task => !_task.done));
-    toast({
-      title: "Tarefas removidas com sucesso",
-      status: "success",
-      duration: 3000,
-      isClosable: true
-    });
+  function deleteAllDoneTasks() {
+    setTaskList(_taskList => _taskList.filter(_task => !_task.isDone));
   }
 
-  function updateTaskState(t: Task) {
-    setTaskList(_state => _state.map(_task => {
-      if (_task === t)
-        _task.done = !_task.done;
-      return _task;
-    }));
+  function updateTask(event: ChangeEvent<HTMLInputElement>, t: Task) {
+    setTaskList(_taskList =>
+      _taskList.map(_task => {
+        if (_task === t) {
+          _task.isDone = event.target.checked;
+        }
+        return _task;
+      })
+    );
   }
 
   return (
-    <Center p={5}>
-      <Flex flexDir="column" w="100%" maxW={1000}>
-        <Heading as="h1">Tarefas</Heading>
-        <form onSubmit={addNewTask}>
-          <HStack mt={5}>
-            <Input type="text" placeholder="Digite algo..." ref={inputTaskRef} borderColor="gray.300" />
-            {useBreakpointValue({
-              base: <Tooltip label="Adicionar" hasArrow bgColor="teal">
-                <IconButton type="submit" aria-label="Adicionar" colorScheme="teal" icon={<AddIcon />} />
-              </Tooltip>,
-              md: <Button type="submit" colorScheme="teal" leftIcon={<AddIcon />}>Adicionar</Button>
-            })}
-          </HStack>
-        </form>
-        {taskList.length < 1
-          ? <SlideFade in>
-            <Heading m={5}>👆</Heading>
-          </SlideFade>
-          : <>
-            <List spacing={3} mt={5}>
-              {taskList.map(_task => (
-                <ListItem key={_task.id} bgColor="gray.100" borderRadius={5} borderColor="gray.300" borderWidth={1} p={3} pl={5}>
-                  <SlideFade in>
-                    <Flex>
-                      <Checkbox isChecked={_task.done} onChange={() => updateTaskState(_task)} colorScheme="teal" borderColor="gray.300" mr={2} />
-                      <Text style={_task.done ? { opacity: .6, textDecorationLine: "line-through", transitionDuration: ".3s" } : { transitionDuration: ".3s" }}>
-                        {_task.content}
-                      </Text>
-                      <Spacer />
-                      <Tooltip label="Remover" hasArrow bgColor="red.500">
-                        <IconButton
-                          aria-label="Remover"
-                          colorScheme="red"
-                          variant="link"
-                          icon={<DeleteIcon />}
-                          onClick={() => removeTask(_task)}
-                        />
-                      </Tooltip>
-                    </Flex>
-                  </SlideFade>
-                </ListItem>
-              ))}
-            </List>
-            {taskList.some(_task => _task.done) &&
-              <ScaleFade in>
-                <Button colorScheme="red" leftIcon={<DeleteIcon />} onClick={removeAllDoneTasks} mt={5}>Remover concluídos</Button>
-              </ScaleFade>
-            }
-          </>
-        }
-      </Flex>
-    </Center>
+    <div className="app">
+      <h1>Tarefas</h1>
+      <form onSubmit={createTask}>
+        <input
+          type="text"
+          className="list-item"
+          placeholder="Digite algo..."
+          ref={inputTaskRef}
+        />
+        <button type="submit" id="btn-add" className="list-item">
+          Adicionar
+        </button>
+      </form>
+      <Reorder.Group as="ul" axis="y" values={taskList} onReorder={setTaskList}>
+        {taskList.map(_task => (
+          <Reorder.Item
+            as="li"
+            key={_task.id}
+            value={_task}
+            className="list-item"
+          >
+            <div>
+              <input
+                type="checkbox"
+                checked={_task.isDone}
+                onChange={event => updateTask(event, _task)}
+                title={`Marcar como${_task.isDone ? ' não ' : ' '}concluído`}
+              />
+              <span className={_task.isDone ? 'done' : ''}>{_task.text}</span>
+            </div>
+            <button onClick={() => deleteTask(_task)} title="Remover">
+              X
+            </button>
+          </Reorder.Item>
+        ))}
+      </Reorder.Group>
+      <AnimatePresence>
+        {taskList.some(_task => _task.isDone) && (
+          <motion.button
+            onClick={deleteAllDoneTasks}
+            id="btn-del"
+            className="list-item"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+          >
+            Remover concluídos
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
